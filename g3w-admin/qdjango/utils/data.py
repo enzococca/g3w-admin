@@ -205,9 +205,11 @@ class QgisProjectLayer(XmlData):
         Get min_scale from layer attribute
         :return: string
         """
-        maximumScale = self.qgisProjectLayerTree.attrib['maximumScale']
+        attrib = self.qgisProjectLayerTree.attrib
+
+        # qgis3 project layer chang maximimScale to maxScale
+        maximumScale = attrib['maximumScale'] if 'maximumScale' in attrib else attrib['maxScale']
         if maximumScale == 'inf':
-            # return 2**31-1
             return 0
         return int(float(maximumScale))
 
@@ -216,9 +218,11 @@ class QgisProjectLayer(XmlData):
         Get min_scale from layer attribute
         :return: string
         """
-        minimunScale = self.qgisProjectLayerTree.attrib['minimumScale']
+        attrib = self.qgisProjectLayerTree.attrib
+
+        # qgis3 project layer chang minimumScale to minScale
+        minimunScale = attrib['minimumScale'] if 'minimumScale' in attrib else attrib['minScale']
         if minimunScale == 'inf':
-            #return 2**31-1
             return 0
         return int(float(minimunScale))
 
@@ -639,11 +643,9 @@ class QgisProject(XmlData):
             for level, layerTreeSubNode in enumerate(layerTreeNode):
                 if level > 0:
 
-
-
                     toRetLayer = {
-                        'name': layerTreeSubNode.attrib['name'],
-                        'expanded': True if layerTreeSubNode.attrib['expanded'] == '1' else False
+                        'name': layerTreeSubNode.attrib.get('name'),
+                        'expanded': True if layerTreeSubNode.attrib.get('expanded') == '1' else False
                     }
 
                     if layerTreeSubNode.tag == 'layer-tree-group':
@@ -673,7 +675,10 @@ class QgisProject(XmlData):
                         toRetLayer.update({
                             'nodes': buildLayerTreeNodeObject(layerTreeSubNode)
                         })
-                    toRetLayers.append(toRetLayer)
+
+                    # qgis3 project file add <custom-order> tag inside layer tree
+                    if layerTreeSubNode.tag != 'custom-order':
+                        toRetLayers.append(toRetLayer)
             return toRetLayers
 
         return buildLayerTreeNodeObject(layerTreeRoot)
